@@ -1,3 +1,4 @@
+import enum
 import numpy as np
 from linear_classifier import LinearClassifier
 
@@ -38,27 +39,47 @@ class MultinomialNaiveBayes(LinearClassifier):
             # corresponds to the fifth feature!
         
         ###########################
-        print(n_classes)
-
         # YOUR CODE HERE
+        
+        # Prior Calculation
 
-        classDict = {}
-        # Find all the independent classes within the class list, this will be used to calculate the prior probability of each class next.
-        for i in classes:
-            if i in classDict:
-                classDict[i] += 1
+        # Number of docs belonging to each class
+        n_class1_docs = 0
+        n_class2_docs = 0
+
+        # Find the number of classes belonging to class 1 and class 2
+        for i in y:
+            if i == 0:
+                n_class1_docs += 1
             else:
-                classDict[i] = 1
-        
-        print(classDict)
-        
-        # Loop through and calculate the probability of getting one specific class out of the set of classes, C.
-        for i in range(n_classes):
-            prior[i] = classDict[i] / n_classes
+                n_class2_docs += 1
 
+        # Find the probability of getting class 1 and class 2 using the above information
+        prior[0] = n_class1_docs / n_docs
+        prior[1] = n_class2_docs/ n_docs
         
+        print("Prior")
+        print(prior)
 
+        # Likelihood Calculation (Use x array)
+        
+        # First, find the total number of words within class 1 and class 2        
 
+        # Loop through the number of documents and find likelihood for class 1
+        for document in range(len(x)):
+            # If it's class 1
+            if y[document][0] == 0:
+
+                # Loop through the word frequencies in the document...
+                for wordFreq in x[document]:
+                    # and calculate the likelihood of each word in relation to all words in class 1
+                    likelihood[document][0] = (wordFreq + 1 / n_words)
+            else:
+                # If it's class 2
+                for wordFreq in x[document]:
+                    likelihood[document][1] = (wordFreq + 1 / n_words)
+
+        print(likelihood)
         ###########################
 
         params = np.zeros((n_words+1,n_classes))
