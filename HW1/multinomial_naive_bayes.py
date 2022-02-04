@@ -1,4 +1,5 @@
 import enum
+from turtle import shape
 import numpy as np
 from linear_classifier import LinearClassifier
 
@@ -41,13 +42,13 @@ class MultinomialNaiveBayes(LinearClassifier):
         ###########################
         # YOUR CODE HERE
         
-        # Prior Calculation
+    # Prior Calculation
 
         # Number of docs belonging to each class
         n_class1_docs = 0
         n_class2_docs = 0
 
-        # Find the number of classes belonging to class 1 and class 2
+        # Find the number of documents belonging to class 1 and class 2
         for i in y:
             if i == 0:
                 n_class1_docs += 1
@@ -56,30 +57,51 @@ class MultinomialNaiveBayes(LinearClassifier):
 
         # Find the probability of getting class 1 and class 2 using the above information
         prior[0] = n_class1_docs / n_docs
-        prior[1] = n_class2_docs/ n_docs
+        prior[1] = n_class2_docs / n_docs
+
+    # Likelihood
+        bigDocPositive = np.zeros(shape=(n_class1_docs, n_words))
+        bigDocNegative = np.zeros(shape=(n_class2_docs, n_words))
         
-        print("Prior")
-        print(prior)
-
-        # Likelihood Calculation (Use x array)
+        class1Match = 0
+        # For all documents in x, extract the ones belonging to class 1.  Use y to do this and store the corresponding rows in x into bigDocPositive.
+        for class1Counter in range(n_docs):
+            if y[class1Counter][0] == 0:
+                bigDocPositive[class1Match][:] = x[class1Counter][:]
+                class1Match += 1
         
-        # First, find the total number of words within class 1 and class 2        
+        # Sum each column within bigDocPositive, and assign that to the corresponding column index of class1Count
+        class1Count = np.empty(shape=(n_words))
+        class1Count = bigDocPositive.sum(axis=0)
+        class1Sum = 0
+        print(class1Count)
+        # Get the sum of the class1Counts list.  This is the denominator of the likelihood for all class 1 word frequencies.
+        for i in range(class1Count.shape[0]):
+            class1Sum += class1Count[i]
+        
+        ################################### DO THE SAME FOR CLASS 2 #############################################
+        class2Match = 0
+        # For all documents in x, extract the ones belonging to class 2.  Use y to do this and store the corresponding rows in x into bigDocNegative.
+        for class2Counter in range(n_docs):
+            if y[class2Counter][0] == 1:
+                bigDocNegative[class2Match][:] = x[class2Counter][:]
+                class2Match += 1
 
-        # Loop through the number of documents and find likelihood for class 1
-        for document in range(len(x)):
-            # If it's class 1
-            if y[document][0] == 0:
-
-                # Loop through the word frequencies in the document...
-                for wordFreq in x[document]:
-                    # and calculate the likelihood of each word in relation to all words in class 1
-                    likelihood[document][0] = (wordFreq + 1 / n_words)
-            else:
-                # If it's class 2
-                for wordFreq in x[document]:
-                    likelihood[document][1] = (wordFreq + 1 / n_words)
-
-        print(likelihood)
+        # Sum up all the columns within class 2
+        class2Count = np.empty(shape=(n_words))
+        class2Count = bigDocNegative.sum(axis=0)
+        class2Sum = 0
+        print(class2Count)
+        for i in range(class2Count.shape[0]):
+            class2Sum += class2Count[i]
+        
+        for i in range(n_classes):
+            for j in range(n_words):
+                if i == 0:
+                    likelihood[j][i] = (class1Count[j] + self.smooth_param / class1Sum + self.smooth_param)
+                else:
+                    likelihood[j][i] = (class2Count[j] + self.smooth_param / class2Sum + self.smooth_param)
+        
         ###########################
 
         params = np.zeros((n_words+1,n_classes))
