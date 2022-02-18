@@ -24,14 +24,10 @@ class MarkovModel:
         # C(1)    0.2   |      0.4
         # G(2)    0.3   |      0.1
         # T(3)    0.2   |      0.4
-        self.emissions = np.array([
-                                   [0.3, 0.1],
+        self.emissions = np.array([[0.3, 0.1],
                                    [0.2, 0.4],
                                    [0.3, 0.1],
-                                   [0.2, 0.4],
-                                ])
-
-
+                                   [0.2, 0.4]])
 
 def Viterbi(model, observations):
 
@@ -70,6 +66,18 @@ def Viterbi(model, observations):
             # In the top row of observation 1, it contains a 0 because the greatest probability transition ocurred from
             # hidden state 0 in observation 0(or hidden state s1).
             backpointer[s][t] = np.argmax(transition_probs)
+    
+    # Get the overall probability of the best path through the HMM
+    bestPathProbability = 0
+    bestPathPointer = list()
+    TViterbi = viterbiMatrix.transpose()
+    
+    for observation in range(len(TViterbi)):
+        bestPathProbability += max(TViterbi[observation])
+        bestPathPointer.append(np.argmax(TViterbi[observation]))
+    
+    
+
 
 def Translate(observations):
 
