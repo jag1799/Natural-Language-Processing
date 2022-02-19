@@ -52,6 +52,7 @@ def Viterbi(model, observations):
     for t in range(1, T):
         # For each of the hidden states, N
         for s in range(N):
+            # Create a list of the transition probabilities from each state in the previous observation to s1 and s2 in the current observation
             transition_probs = list()
             for sprime in range(N):
                 transition_probs.append(viterbiMatrix[sprime][t-1] * model.states[sprime][s] * model.emissions[translation[t]][s])
@@ -72,12 +73,49 @@ def Viterbi(model, observations):
     bestPathPointer = list()
     TViterbi = viterbiMatrix.transpose()
     
-    for observation in range(len(TViterbi)):
-        bestPathProbability += max(TViterbi[observation])
-        bestPathPointer.append(np.argmax(TViterbi[observation]))
+    # print(TViterbi)
+    # for observation in range(len(TViterbi)):
+    #     bestPathProbability += max(TViterbi[observation])
+    #     bestPathPointer.append(np.argmax(TViterbi[observation]))
+
+    bestPathProbability = max(TViterbi[T-1][:])
+
+    bestPathPointer = np.argmax(TViterbi[T-1][:])
     
+    bestPath = FindBestPath(bestPathPointer, viterbiMatrix, T, N, backpointer)
+
+    
+    print("Best Path(from matrix[0] to matrix[T]): ", end="")
+    bestPath.reverse()
+    print(bestPath)
+
+
     
 
+
+def FindBestPath(bestPathPointer, viterbiMatrix, T, N, backpointer):
+
+
+    bestPath = list()
+    TViterbi = viterbiMatrix.transpose()
+    bestPathProbability = 0
+
+    i = T-1
+
+    # For the number of observations within backpointer, starting at the position of bestPathPointer
+    while i >= 0:
+
+        # Get the position with the maximum probability at each observation
+        best_state = np.argmax(TViterbi[i])
+        if best_state == 0:
+            bestPath.append('s1')
+            bestPathProbability += TViterbi[i][best_state]
+        else:
+            bestPath.append('s2')
+            bestPathProbability += TViterbi[i][best_state]
+        i -= 1
+    print("Best probability: " + str(bestPathProbability))
+    return bestPath
 
 def Translate(observations):
 
