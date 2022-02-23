@@ -8,8 +8,8 @@ class MarkovModel:
         # Form of matrix is:
         #         s1(0)  |   s2(1)
         # s1(0)     0.6  |     0.3
-        # s2(1)     0.7  |     0.7
-        self.states = np.array([[0.6, 0.7], 
+        # s2(1)     0.4  |     0.7
+        self.states = np.array([[0.6, 0.4], 
                                 [0.3, 0.7]])
 
         # S is hidden, but needed to initialize the HMM
@@ -58,44 +58,39 @@ def Viterbi(model, observations):
                 transition_probs.append(viterbiMatrix[sprime][t-1] * model.states[sprime][s] * model.emissions[translation[t]][s])
             
             viterbiMatrix[s][t] = max(transition_probs)
-            
-            
+        
             # backpointer refers to the previous node that generated the maximum probability.  
             # Example: At observation t = 1, the bottom row in column 1 (not 0!) contains a 1 to represent that the greatest
             # probability transition to hidden state s2 in observation 1 came from hidden state s2 in observation 0.
             
             # In the top row of observation 1, it contains a 0 because the greatest probability transition ocurred from
             # hidden state 0 in observation 0(or hidden state s1).
-            backpointer[s][t] = np.argmax(transition_probs)
+            backpointer[s][t] = np.argmax(viterbiMatrix[:, t-1])
     
     # Get the overall probability of the best path through the HMM
     bestPathProbability = 0
     bestPathPointer = list()
     TViterbi = viterbiMatrix.transpose()
-    
-    # print(TViterbi)
-    # for observation in range(len(TViterbi)):
-    #     bestPathProbability += max(TViterbi[observation])
-    #     bestPathPointer.append(np.argmax(TViterbi[observation]))
 
     bestPathProbability = max(TViterbi[T-1][:])
 
     bestPathPointer = np.argmax(TViterbi[T-1][:])
     
-    bestPath = FindBestPath(bestPathPointer, viterbiMatrix, T, N, backpointer)
+    bestPath = FindBestPath(viterbiMatrix, T)
 
-    
-    print("Best Path(from matrix[0] to matrix[T]): ", end="")
+    print("\n")
+    print("Viterbi Matrix: ")
+    print(viterbiMatrix)
+    print("\n")
+    print("Backtrace Matrix: ")
+    print(backpointer)
+    print("\n")
+    print("Best Path(from t = 0 to t = T): ", end="")
     bestPath.reverse()
     print(bestPath)
 
 
-    
-
-
-def FindBestPath(bestPathPointer, viterbiMatrix, T, N, backpointer):
-
-
+def FindBestPath(viterbiMatrix, T):
     bestPath = list()
     TViterbi = viterbiMatrix.transpose()
     bestPathProbability = 0
@@ -114,7 +109,7 @@ def FindBestPath(bestPathPointer, viterbiMatrix, T, N, backpointer):
             bestPath.append('s2')
             bestPathProbability += TViterbi[i][best_state]
         i -= 1
-    print("Best probability: " + str(bestPathProbability))
+    print("Best path probability (Sumtotal for each node in the path): " + str(bestPathProbability))
     return bestPath
 
 def Translate(observations):
