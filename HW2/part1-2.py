@@ -46,7 +46,7 @@ def Viterbi(model, observations):
     for s in range(N):
         # Initialize the starting hidden states with appropriate probabilities for future states
         viterbiMatrix[s][0] = model.startProbabilities[s] * model.emissions[translation[0]][s]
-        backpointer[s][0] = 0
+        backpointer[s][0] = -1
     
     # For the remaining number of observations
     for t in range(1, T):
@@ -62,10 +62,10 @@ def Viterbi(model, observations):
             # backpointer refers to the previous node that generated the maximum probability.  
             # Example: At observation t = 1, the bottom row in column 1 (not 0!) contains a 1 to represent that the greatest
             # probability transition to hidden state s2 in observation 1 came from hidden state s2 in observation 0.
-            
+
             # In the top row of observation 1, it contains a 0 because the greatest probability transition ocurred from
             # hidden state 0 in observation 0(or hidden state s1).
-            backpointer[s][t] = np.argmax(viterbiMatrix[:, t-1])
+            backpointer[s][t] = np.argmax(viterbiMatrix[:, t-1]  * model.states[:, s] * model.emissions[translation[t], s])
     
     # Get the overall probability of the best path through the HMM
     bestPathProbability = 0
@@ -76,7 +76,7 @@ def Viterbi(model, observations):
 
     bestPathPointer = np.argmax(TViterbi[T-1][:])
     
-    bestPath = FindBestPath(viterbiMatrix, T)
+    bestPath = FindBestPath(viterbiMatrix, T, backpointer)
 
     print("\n")
     print("Viterbi Matrix: ")
@@ -86,29 +86,20 @@ def Viterbi(model, observations):
     print(backpointer)
     print("\n")
     print("Best Path(from t = 0 to t = T): ", end="")
-    bestPath.reverse()
+    
     print(bestPath)
 
 
-def FindBestPath(viterbiMatrix, T):
-    bestPath = list()
+def FindBestPath(viterbiMatrix, T, backpointer):
+    bestPath = np.zeros(T+1)
     TViterbi = viterbiMatrix.transpose()
     bestPathProbability = 0
 
     i = T-1
+    bestPath[-1] = np.argmax(viterbiMatrix[:, T-1])
+    for j in range(i, -1, -1):
 
-    # For the number of observations within backpointer, starting at the position of bestPathPointer
-    while i >= 0:
-
-        # Get the position with the maximum probability at each observation
-        best_state = np.argmax(TViterbi[i])
-        if best_state == 0:
-            bestPath.append('s1')
-            bestPathProbability += TViterbi[i][best_state]
-        else:
-            bestPath.append('s2')
-            bestPathProbability += TViterbi[i][best_state]
-        i -= 1
+        bestPath[j] = backpointer[int(bestPath[j+1]), j]
     print("Best path probability (Sumtotal for each node in the path): " + str(bestPathProbability))
     return bestPath
 
