@@ -100,6 +100,7 @@ def FindBestPath(viterbiMatrix, T, backpointer):
     for j in range(i, -1, -1):
 
         bestPath[j] = backpointer[int(bestPath[j+1]), j]
+        bestPathProbability = max(viterbiMatrix[0, T-1], viterbiMatrix[1, T-1])
     print("Best path probability (Sumtotal for each node in the path): " + str(bestPathProbability))
     return bestPath
 
